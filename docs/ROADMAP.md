@@ -9,7 +9,8 @@
 - [x] Numeric-only privacy boundary, non-finite input handling, bounded report spectrum bins.
 - [x] Host temperature, uptime, memory, disk, CPU load and undervoltage diagnostics.
 - [x] Fix installer executable bit, add Python 3.11/3.12 CI and simulated-hardware tests.
-- [ ] CI must pass on GitHub.
+- [x] GitHub Actions CI green for Python 3.11 and 3.12 (simulated hardware).
+- [x] Reporter outage, idempotency-key and successful acknowledgement unit tests.
 - [ ] Pi 5 64-bit OS and USB SDR device-permissions validation.
 - [ ] 24-hour thermal, throughput and reboot tests.
 

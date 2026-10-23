@@ -30,7 +30,9 @@ def config(path):
     values.update({k: v for k, v in os.environ.items() if k in {
         "NODE_ID", "DB_PATH", "REPORT_URL", "REPORT_TOKEN_FILE",
         "SPECTRUM_COMMAND", "MAX_SAMPLES_PER_RUN", "RETENTION_DAYS",
-        "MAX_PENDING", "REPORT_BATCH_SIZE"}})
+        "MAX_PENDING", "REPORT_BATCH_SIZE", "SPECTRUM_MODE",
+        "RTL_POWER_PATH", "RTL_POWER_RANGES", "RTL_POWER_INTERVAL_SECONDS",
+        "SPECTRUM_BIN_HZ", "MAX_REPORT_BINS", "SWEEP_TIMEOUT_SECONDS"}})
     return values
 
 def integer(cfg, key, default, minimum, maximum):
@@ -124,11 +126,24 @@ def report(cfg):
 
 def status(cfg):
     with connect(cfg) as con:
-        pending, delivered = con.execute(
+        pending, delivered, last_seen, oldest_pending = con.execute(
             "SELECT SUM(CASE WHEN delivered_at IS NULL THEN 1 ELSE 0 END),"
-            "SUM(CASE WHEN delivered_at IS NOT NULL THEN 1 ELSE 0 END) FROM reports"
+            "SUM(CASE WHEN delivered_at IS NOT NULL THEN 1 ELSE 0 END),"
+            "MAX(created_at),"
+            "MIN(CASE WHEN delivered_at IS NULL THEN created_at ELSE NULL END)"
+            " FROM reports"
         ).fetchone()
-    return {"pending": pending or 0, "delivered_retained": delivered or 0}
+        row = con.execute(
+            "SELECT payload FROM reports ORDER BY created_at DESC, rowid DESC LIMIT 1"
+        ).fetchone()
+    latest = json.loads(row[0]) if row else {}
+    return {
+        "pending": pending or 0, "delivered_retained": delivered or 0,
+        "last_collected_at": last_seen,
+        "oldest_pending_age_seconds": max(0, int(time.time()) - oldest_pending)
+        if oldest_pending is not None else None,
+        "last_spectrum_error": latest.get("spectrum", {}).get("error")
+    }
 
 def main(argv=None):
     p = argparse.ArgumentParser()

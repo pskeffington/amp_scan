@@ -52,3 +52,7 @@ Continuous integration covers Python 3.11/3.12 without SDR hardware. Field gates
 ## Data discipline
 
 The collector stores **numbers and hardware health only**, with storage retention and per-upload size limits. No unknown Wi-Fi/BLE device identities or decoded communications are collected. Receivers are passive and transmit no RF signal. Run only with proper authorization and follow local spectrum monitoring laws.
+
+## Operational status
+
+The `status` command reports queued and acknowledged counts, time of the latest local collection, oldest unsent record age and the last spectrum error class (no command stderr or hardware identifiers). Unit tests cover successful HTTPS acknowledgements and offline replay, but a real receiver and authenticated server have not been tested together.
