@@ -1,0 +1,37 @@
+name: edge-validation
+
+on:
+  push:
+    branches: [main, "feature/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Validate package, shell scripts and executable installer
+        run: |
+          python -m compileall -q amp_scan tests
+          sh -n deploy/install.sh
+          test -x deploy/install.sh
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: CLI smoke test without attached SDR hardware
+        env:
+          NODE_ID: ci-test
+          DB_PATH: /tmp/amp_scan_ci.db
+        run: |
+          python -m amp_scan.cli --env deploy/amp-scan.env.example collect
+          python -m amp_scan.cli --env deploy/amp-scan.env.example status
+          python -m amp_scan.cli --env deploy/amp-scan.env.example report

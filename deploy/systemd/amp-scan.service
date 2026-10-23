@@ -1,0 +1,22 @@
+[Unit]
+Description=amp_scan passive numeric RF and host telemetry collector
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=amp-scan
+Group=amp-scan
+Environment=PYTHONPATH=/opt/amp-scan
+ExecStart=/usr/bin/python3 -m amp_scan.cli collect
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/amp-scan
+ReadOnlyPaths=/etc/amp-scan
+RestrictAddressFamilies=AF_UNIX
+CapabilityBoundingSet=
+MemoryMax=256M
+TimeoutStartSec=180
+Nice=10

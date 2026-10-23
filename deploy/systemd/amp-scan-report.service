@@ -1,0 +1,20 @@
+[Unit]
+Description=amp_scan aggregate telemetry store-forward reporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=amp-scan
+Group=amp-scan
+Environment=PYTHONPATH=/opt/amp-scan
+ExecStart=/usr/bin/python3 -m amp_scan.cli report
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/amp-scan
+ReadOnlyPaths=/etc/amp-scan
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
