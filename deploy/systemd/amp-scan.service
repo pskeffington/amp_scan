@@ -17,3 +17,6 @@ ReadWritePaths=/var/lib/amp-scan
 ReadOnlyPaths=/etc/amp-scan
 RestrictAddressFamilies=AF_UNIX
 CapabilityBoundingSet=
+MemoryMax=256M
+TimeoutStartSec=180
+Nice=10

@@ -1,33 +1,36 @@
 # Phased delivery gates
 
-## G0 - Repository bootstrap
-- [x] Python package, configuration, bounded SQLite WAL, installation and tests.
-- [x] Separate official RFbeta scanner service template from custom telemetry service.
+## G0 - Initial foundation
+- [x] Python package, systemd deployment, SQLite WAL queue, retention, HTTPS reporting.
+- [x] Separate third-party RFbeta upstream from private numerical telemetry.
 
-## G1 - Pi 5 lab validation
-- [ ] Verify Raspberry Pi OS 64-bit image and service user.
-- [ ] Execute unit tests on device, boot and reboot tests.
-- [ ] Verify USB SDR power draw and under-voltage recovery.
+## G1 - Pi 5 field readiness
+- [x] Native `rtl_power` CSV power FFT input with configurable frequency ranges.
+- [x] Numeric-only privacy boundary, non-finite input handling, bounded report spectrum bins.
+- [x] Host temperature, uptime, memory, disk, CPU load and undervoltage diagnostics.
+- [x] Fix installer executable bit, add Python 3.11/3.12 CI and simulated-hardware tests.
+- [ ] CI must pass on GitHub.
+- [ ] Pi 5 64-bit OS and USB SDR device-permissions validation.
+- [ ] 24-hour thermal, throughput and reboot tests.
 
 ## G2 - RFbeta enrollment
-- [ ] Review official RFbeta documentation and scanner source.
-- [ ] Provision credentials from the RFbeta operator; configure official uploader exactly as documented.
-- [ ] End-to-end test against RFbeta's supported onboarding flow and confirm acceptance.
+- [ ] Review publisher-provided `rf_scan.py` source and its credential handling.
+- [ ] Provision official node ID/token and launch supported upstream scanner under a restricted account.
+- [ ] Verify RFbeta submission delivery and review-queue acceptance.
 
-## G3 - High-volume numeric spectrum sampling
-- [ ] Select compatible receive-only SDR and reviewed spectrum command.
-- [ ] Confirm usable frequencies, calibration, antennas, and duty cycle.
-- [ ] 24-hour throughput and thermal testing, tuned frequency-bin aggregation.
-- [ ] Verify no identifiers/content entered local spectrum streams.
+## G3 - High-throughput data pipeline
+- [ ] Tune FFT sweep schedules for connected receiver models, filters and front-end limits.
+- [ ] Introduce local longer-duration aggregate summaries and audit metrics.
+- [ ] Confirm there are no stored MACs, SSIDs, audio, IQ or decoded traffic.
 
-## G4 - Reporting and resilience
-- [ ] Provision private HTTPS telemetry collector with per-node token and idempotency.
-- [ ] Test network outage, storage saturation, retry behavior and recovery.
-- [ ] Establish loss/latency/error budgets, dashboard and alert thresholds.
+## G4 - Resilient reporting
+- [ ] Provision operator-owned HTTPS ingestion endpoint with per-node auth and idempotency.
+- [ ] Test offline backlog, backoff/rate-limits, storage saturation, sustained writes and replay.
+- [ ] Measure packet loss, delivery latency, and health alarms.
 
-## G5 - Security and release
-- [ ] Configure secure boot/device provisioning as supported.
-- [ ] Sign/review releases, rotate credentials, add updates and dependency audits.
-- [ ] Validate legal and RFbeta privacy constraints.
+## G5 - Release
+- [ ] Pin and verify upstream dependencies; rotate and protect secrets.
+- [ ] Document lifecycle / unattended upgrade policy and rollback.
+- [ ] Validate privacy/legal boundary and independent reviewer sign-off.
 
-**Status**: initial software scaffold delivered. Not RFbeta-enrolled, not field-tested; no claim of active auto-upload.
+Status: Software G1 prototype committed; no claim of Pi 5 hardware validation or RFbeta end-to-end integration.
