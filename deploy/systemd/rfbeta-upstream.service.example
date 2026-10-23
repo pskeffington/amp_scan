@@ -1,0 +1,23 @@
+# This is a TEMPLATE ONLY. Do not enable before reviewing and installing
+# the official RFbeta scanner from RFbeta's published Raspberry Pi instructions.
+[Unit]
+Description=Official RFbeta scanner (operator-managed)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rfbeta
+Group=rfbeta
+WorkingDirectory=/opt/rfbeta
+ExecStart=/usr/bin/python3 /opt/rfbeta/rf_scan.py
+Restart=on-failure
+RestartSec=20
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/rfbeta
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=amp_scan report upload schedule
+
+[Timer]
+OnBootSec=90s
+OnUnitInactiveSec=2min
+Persistent=true
+Unit=amp-scan-report.service
+
+[Install]
+WantedBy=timers.target

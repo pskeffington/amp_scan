@@ -1,0 +1,12 @@
+[Unit]
+Description=amp_scan sampling schedule
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=amp-scan.service
+
+[Install]
+WantedBy=timers.target
