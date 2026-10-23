@@ -1,14 +1,9 @@
 """Periodic aggregate-only local collector and store-forward reporter."""
 from __future__ import annotations
 import argparse
-import csv
-import hashlib
-import hmac
-import io
 import json
 import os
 from pathlib import Path
-import platform
 import sqlite3
 import subprocess
 import sys
@@ -17,6 +12,8 @@ import urllib.error
 import urllib.request
 from urllib.parse import urlsplit
 import uuid
+from .spectrum import spectrum
+from .health import host_health
 
 MAX_PAYLOAD = 64 * 1024
 
@@ -53,67 +50,17 @@ def connect(cfg):
     """)
     return con
 
-def read_temperature():
-    p = Path("/sys/class/thermal/thermal_zone0/temp")
-    try:
-        return round(int(p.read_text().strip()) / 1000, 2)
-    except (OSError, ValueError):
-        return None
-
-def spectrum(cfg):
-    """Accept numeric-only spectrum observations from an operator-reviewed command."""
-    cmd = cfg.get("SPECTRUM_COMMAND", "")
-    if not cmd:
-        return {"enabled": False}
-    # No shell expansion. Operators must specify an executable with simple arguments.
-    import shlex
-    parts = shlex.split(cmd)
-    if not parts or not Path(parts[0]).is_absolute():
-        raise ValueError("SPECTRUM_COMMAND must start with an absolute executable path")
-    max_samples = integer(cfg, "MAX_SAMPLES_PER_RUN", 10000, 1, 100000)
-    proc = subprocess.run(parts, capture_output=True, timeout=35, check=True)
-    if len(proc.stdout) > 4_000_000:
-        raise ValueError("spectrum output exceeds 4MB cap")
-    bins = {}
-    count = 0
-    for row in csv.reader(io.StringIO(proc.stdout.decode("utf-8", "strict"))):
-        if len(row) != 2:
-            continue
-        try:
-            hz, dbm = float(row[0]), float(row[1])
-        except ValueError:
-            continue
-        if not (1e4 <= hz <= 6e10 and -200 <= dbm <= 100):
-            continue
-        band = int(hz // 1e6)
-        item = bins.setdefault(band, [0, 0.0, -200.0])
-        item[0] += 1
-        item[1] += dbm
-        item[2] = max(item[2], dbm)
-        count += 1
-        if count >= max_samples:
-            break
-    result = [
-        {"mhz_bin": k, "count": v[0], "mean_dbm": round(v[1] / v[0], 2),
-         "peak_dbm": round(v[2], 2)}
-        for k, v in sorted(bins.items())
-    ]
-    return {"enabled": True, "sample_count": count, "bins": result[:1024],
-            "truncated_bins": len(result) > 1024}
-
 def collect(cfg):
     now = int(time.time())
+    try:
+        reading = spectrum(cfg)
+    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+        # Health reports continue if the SDR is disconnected; stderr is never stored.
+        reading = {"enabled": True, "error": type(exc).__name__}
     report = {"schema": "amp-scan.v1", "event_id": str(uuid.uuid4()),
               "node_id": cfg.get("NODE_ID", "unconfigured"),
-              "timestamp": now, "host": {
-                  "os": platform.system(), "machine": platform.machine(),
-                  "temperature_c": read_temperature(), "uptime_seconds": None},
-              "spectrum": spectrum(cfg)}
-    try:
-        report["host"]["uptime_seconds"] = round(float(
-            Path("/proc/uptime").read_text().split()[0]), 1)
-    except (OSError, ValueError, IndexError):
-        pass
+              "timestamp": now, "host": host_health(cfg),
+              "spectrum": reading}
     payload = json.dumps(report, separators=(",", ":"), allow_nan=False)
     if len(payload.encode("utf-8")) > MAX_PAYLOAD:
         raise ValueError("report exceeds payload cap")
